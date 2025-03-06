@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seattle Light Rail Stations with Buffers</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.8.1/mapbox-gl.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf"></script>
+    <style>
+        /* Style the map container */
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+        // Set your Mapbox access token
+        mapboxgl.accessToken = 'pk.eyJ1IjoiY29ubm9yY3JjNzgiLCJhIjoiY202c2dqcmVsMDhrOTJscHpxOHF2M3ByNiJ9.O9DQdwIAwmYc8tcDsksmug'; 
+
+        // Initialize the Mapbox map
+        var map = new mapboxgl.Map({
+            container: 'map', // ID of the div to display the map
+            style: 'mapbox://styles/mapbox/streets-v11', // Map style
+            center: [-122.335167, 47.608013], // Seattle's coordinates
+            zoom: 12
+        });
+
+        // Current and future Seattle Light Rail station coordinates (current and future stations)
+        const stations = [
+            // Current stations
+            { name: "University of Washington", coordinates: [-122.3034, 47.6550] },
+            { name: "Capitol Hill", coordinates: [-122.3145, 47.6190] },
+            { name: "Pioneer Square", coordinates: [-122.3355, 47.6014] },
+            { name: "International District/Chinatown", coordinates: [-122.3292, 47.5988] },
+            { name: "Beacon Hill", coordinates: [-122.3160, 47.5789] },
+            { name: "Mount Baker", coordinates: [-122.2900, 47.5765] },
+            { name: "Othello", coordinates: [-122.2800, 47.5329] },
+            { name: "Rainier Beach", coordinates: [-122.2560, 47.5113] },
+
+            // Future stations
+            { name: "Ballard (Future)", coordinates: [-122.3844, 47.6689] },
+            { name: "West Seattle (Future)", coordinates: [-122.3840, 47.5720] },
+            { name: "Northgate (Future)", coordinates: [-122.3322, 47.7057] },
+            { name: "Lynnwood (Future)", coordinates: [-122.3243, 47.8130] },
+            { name: "Redmond (Future)", coordinates: [-122.1215, 47.6769] },
+        ];
+
+        // Add stations to the map
+        stations.forEach(function(station) {
+            // Create a marker for each station
+            new mapboxgl.Marker()
+                .setLngLat(station.coordinates)
+                .setPopup(new mapboxgl.Popup().setText(station.name))
+                .addTo(map);
+
+            // Create a buffer (0.5 mile) around each station
+            var point = turf.point(station.coordinates);
+            var buffer = turf.buffer(point, 0.5, { units: 'miles' });
+
+            // Add the buffer as a polygon to the map
+            map.on('load', function() {
+                map.addSource(station.name + '-buffer', {
+                    type: 'geojson',
+                    data: buffer
+                });
+
+                map.addLayer({
+                    id: station.name + '-buffer-layer',
+                    type: 'fill',
+                    source: station.name + '-buffer',
+                    layout: {},
+                    paint: {
+                        'fill-color': '#888888',
+                        'fill-opacity': 0.5
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
